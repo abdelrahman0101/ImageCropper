@@ -20,13 +20,17 @@
         }
 
         main {
+            margin: auto;
+            justify-content: center;
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
         }
 
         #controls {
             display: flex;
             flex-direction: column;
+            justify-content: center;
             width: 200px;
             gap: 10px;
         }
@@ -35,6 +39,7 @@
         #toolButtons {
             display: none;
             flex-direction: column;
+            justify-content: center;
             gap: 10px;
         }
 
@@ -81,6 +86,7 @@
 <script>
     function Path() { //path for free-form selection
         this.points = [];
+        this.isOpen = false;
         this.minX = Infinity;
         this.minY = Infinity;
         this.maxX = -Infinity;
@@ -91,6 +97,8 @@
             this.minY = Math.min(this.minY, y);
             this.maxX = Math.max(this.maxX, x);
             this.maxY = Math.max(this.maxY, y);
+            //Close the path is the new point is too close to the start point
+            this.isOpen = (Math.abs(x - this.points[0].x) > 5 || Math.abs(y - this.points[0].y) > 5);
         }
         this.getHeight = function () {
             return this.maxY - this.minY;
@@ -114,25 +122,22 @@
     let img = null;  // to be loaded when an image is uploaded
     let status = EditMode.UploadImage;
     let drawing = false;
-    let path = new Path();
-    let open = false;
+    let path = new Path(); //for free-form selection
     let start_point = null;
     let cropped_area = {x: 0, y: 0, w: cnvs.clientWidth, h: cnvs.clientHeight}; // selected area of the image
     let scaleRatio = 1;
 
     cnvs.addEventListener("pointerdown", (e) => {
+        //console.log("Down at", e.clientX, e.clientY);
         if (status !== EditMode.Crop) {
             return;
         }
         let x = e.clientX - cnvs.getBoundingClientRect().left;
         let y = e.clientY - cnvs.getBoundingClientRect().top;
-        start_point = {x, y};
-        ctx.globalCompositeOperation = "source-over";
-        drawing = true;
+        ctx.globalCompositeOperation = "source-over"; //draw over existing content
         const cropMode = document.querySelector("input:checked").value;
         if (cropMode === "free") {
-            path.addPoint(x, y);
-            if (!open) {
+            if (!path.isOpen) {
                 //starting a new selection path
                 reloadImage();
                 //draw a starting point (circle)
@@ -144,16 +149,21 @@
                 //open a new path
                 ctx.beginPath();
                 ctx.moveTo(x, y);
-                open = true;
             } else {
                 //draw a new segment
                 ctx.lineTo(x, y);
                 ctx.stroke();
             }
+            path.addPoint(x, y);
+        } else {
+            clearSelection();
         }
+        start_point = {x, y};
+        drawing = true;
     });
 
     cnvs.addEventListener("pointermove", (e) => {
+        //console.log("Moved at", e.clientX, e.clientY);
         if (drawing) {
             let x = e.clientX - cnvs.getBoundingClientRect().left;
             let y = e.clientY - cnvs.getBoundingClientRect().top;
@@ -178,15 +188,13 @@
                         Math.abs(x - start_point.x) / 2, Math.abs(y - start_point.y) / 2,
                         0, 0, 2 * Math.PI);
                     ctx.stroke();
+                    break;
             }
         }
     });
 
     cnvs.addEventListener("pointerup", (e) => {
-        finishDrawing(e);
-    });
-
-    function finishDrawing(e) {
+        //console.log("Up at", e.clientX, e.clientY);
         if (!drawing)
             return;
         drawing = false;
@@ -195,51 +203,50 @@
         let cropMode = document.querySelector("input:checked").value;
         switch (cropMode) {
             case "free":
-                if (path.getHeight() > 20 && path.getWidth() > 20 &&  //large area
-                    Math.abs(x - path.points[0].x) < 10 && Math.abs(y - path.points[0].y) < 10) //close to starting point
-                {
-                    //path is closed
-                    open = false;
-                    //reload image to erase selection path
-                    reloadImage();
-                    ctx.beginPath();
-                    ctx.moveTo(path.points[0].x, path.points[0].y);
-                    for (let p of path.points) {
-                        ctx.lineTo(p.x, p.y);
-                    }
-                    //fill and keep intersection area of the drawn image
-                    ctx.globalCompositeOperation = "destination-in";
-                    ctx.fill();
-                    cropped_area = {x: path.minX, y: path.minY, w: path.maxX - path.minX, h: path.maxY - path.minY};
-                    path = new Path();
+                cropped_area = {x: path.minX, y: path.minY, w: path.getWidth(), h: path.getHeight()};
+                if (path.isOpen) {
+                    return; //path is still open, continue adding segments
                 }
                 break;
             case "rectangle":
-                reloadImage();
-                ctx.beginPath();
-                ctx.rect(Math.min(x, start_point.x), Math.min(y, start_point.y),
-                    Math.abs(x - start_point.x), Math.abs(y - start_point.y));
-                ctx.globalCompositeOperation = "destination-in";
-                ctx.fill();
-                cropped_area = {
-                    x: Math.min(x, start_point.x), y: Math.min(y, start_point.y),
-                    w: Math.abs(x - start_point.x), h: Math.abs(y - start_point.y)
-                };
-                break;
             case "ellipse":
-                reloadImage();
-                ctx.beginPath();
-                ctx.ellipse(start_point.x + (x - start_point.x) / 2, start_point.y + (y - start_point.y) / 2,
-                    Math.abs(x - start_point.x) / 2, Math.abs(y - start_point.y) / 2,
-                    0, 0, 2 * Math.PI);
-                ctx.globalCompositeOperation = "destination-in";
-                ctx.fill();
                 cropped_area = {
                     x: Math.min(x, start_point.x), y: Math.min(y, start_point.y),
                     w: Math.abs(x - start_point.x), h: Math.abs(y - start_point.y)
                 };
                 break;
         }
+        finishCropping(cropMode);
+    });
+
+    function finishCropping(cropMode) {
+        //reload image to erase selection path
+        reloadImage();
+        if (cropped_area.w < 20 || cropped_area.h < 20) {
+            //too small area, probably a user mistake
+            return;
+        }
+        ctx.beginPath(); //create a cropping boundary around the cropped area
+        switch (cropMode) {
+            case "free":
+                ctx.moveTo(path.points[0].x, path.points[0].y);
+                for (let p of path.points) {
+                    ctx.lineTo(p.x, p.y);
+                }
+                path = new Path();
+                break;
+            case "rectangle":
+                ctx.rect(cropped_area.x, cropped_area.y, cropped_area.w, cropped_area.h);
+                break;
+            case "ellipse":
+                ctx.ellipse(cropped_area.x + cropped_area.w / 2, cropped_area.y + cropped_area.h / 2,
+                    cropped_area.w / 2, cropped_area.h / 2,
+                    0, 0, 2 * Math.PI);
+                break;
+        }
+        //fill the boundary and keep only the intersection area of existing image
+        ctx.globalCompositeOperation = "destination-in";
+        ctx.fill();
     }
 
     function getScaleToFitRatio() {
@@ -247,6 +254,7 @@
     }
 
     function reloadImage() {
+        //redraw the uploaded image on the canvas
         if (img != null) {
             ctx.globalCompositeOperation = "source-over";
             ctx.clearRect(0, 0, cnvs.clientWidth, cnvs.clientHeight);
@@ -255,8 +263,13 @@
                 img.width * scaleRatio,
                 img.height * scaleRatio
             );
-            document.querySelector("#cnvs_bg").style.background = "url('" + cnvs.toDataURL("image/png") + "')";
         }
+    }
+
+    function setCanvasBackground() {
+        //set the canvas container's background to the current image on the canvas
+        //background image will appear behind the transparent pixels (bg color) after cropping
+        document.querySelector("#cnvs_bg").style.background = "url('" + cnvs.toDataURL("image/png") + "')";
     }
 
     document.querySelector("#file_importer").addEventListener("change", (e) => {
@@ -267,12 +280,35 @@
             img.onload = function () {
                 scaleRatio = getScaleToFitRatio();
                 reloadImage();
+                setCanvasBackground();
                 img.onload = null;
                 showTools();
             };
             img.src = fileReader.result;
         }
         fileReader.readAsDataURL(file_url);
+    });
+
+    function clearSelection() {
+        reloadImage();
+        path = new Path();
+        cropped_area = {x: 0, y: 0, w: cnvs.clientWidth, h: cnvs.clientHeight};
+        start_point = null;
+        drawing = false;
+    }
+
+    document.querySelector("#cnvs").addEventListener("pointerout", () => {
+        if (drawing)
+            clearSelection();
+    });
+
+    document.querySelector("#cnvs").addEventListener("blur", () => {
+        if (drawing)
+            clearSelection();
+    });
+
+    document.querySelector("#btnReset").addEventListener("click", () => {
+        clearSelection();
     });
 
     document.querySelector("#btnUpload").addEventListener("click", () => {
@@ -285,14 +321,10 @@
         status = EditMode.Crop;
     });
 
-    document.querySelector("#btnReset").addEventListener("click", () => {
-        reloadImage();
-        path = new Path();
-        open = false;
-    });
-
     document.querySelector("#btnSave").addEventListener("click", () => {
         // save cropped image
+        if (path.isOpen)
+            finishCropping("free");
         let cropped = ctx.getImageData(cropped_area.x, cropped_area.y, cropped_area.w, cropped_area.h);
         let out_cnvs = document.createElement("canvas");
         out_cnvs.width = cropped_area.w;
