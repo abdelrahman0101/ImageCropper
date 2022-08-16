@@ -4,11 +4,20 @@
 <head>
     <meta charset="utf-8">
     <title>Image Cropper</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         #cnvs {
             margin: 0;
             display: block;
             background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .zoomMode {
+            cursor: grab;
+        }
+
+        .cropMode {
+            cursor: crosshair;
         }
 
         #cnvs_bg {
@@ -67,14 +76,44 @@
             background-color: #F25;
             color: white;
             text-transform: uppercase;
-
         }
 
         button:hover {
             opacity: 0.8;
         }
 
+        .icons {
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 20px 20px;
+            display: inline-block;
+            margin: auto;
+            width: 25px;
+            height: 25px;
+        }
+
+        #btnReflectH i{
+            background-image: url("icons/reflect_h.svg");
+        }
+
+        #btnReflectV i{
+            background-image: url("icons/reflect_v.svg");
+        }
+
+        .tool {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            padding: 0;
+        }
+
+
+
     </style>
+    
 </head>
 
 <body>
@@ -85,15 +124,15 @@
     </div>
     <div id="controls">
         <input type="file" id="file_importer" accept="image/*">
-        <button id="btnUpload" class="btnMain">Upload Image</button>
+        <button id="btnUpload" class="btnMain"><i class="fa fa-cloud-upload"></i> Upload Image</button>
         <div id="toolButtons">
-            <button id="btnCrop" class="tool btnMain">Next</button>
-            <button id="btnZoomIn" class="tool">Zoom In</button>
-            <button id="btnZoomOut" class="tool">Zoom Out</button>
-            <button id="btnRotateLeft" class="tool">Rotate Left</button>
-            <button id="btnRotateRight" class="tool">Rotate Right</button>
-            <button id="btnReflectH" class="tool">Reflect Horizontally</button>
-            <button id="btnReflectV" class="tool">Reflect Vertically</button>
+            <button id="btnCrop" class="tool btnMain ">Next</button>
+            <button id="btnZoomIn" class="tool"><i class="fa fa-plus"></i></button>
+            <button id="btnZoomOut" class="tool"><i class="fa fa-minus"></i></button>
+            <button id="btnRotateLeft" class="tool"><i class="fa fa-rotate-left"></i></button>
+            <button id="btnRotateRight" class="tool"><i class="fa fa-rotate-right"></i></button>
+            <button id="btnReflectH" class="tool"><i class="icons"></i></button>
+            <button id="btnReflectV" class="tool"><i class="icons"></i></button>
         </div>
         <div id="cropTool" class="toolOptions">
             <label>How do you want to crop it?</label>
@@ -109,9 +148,9 @@
                 <input type="radio" name="selection" value="ellipse">
                 Circle
             </label>
-            <button id="btnReset" class="btnSub">&#8635; Reset</button>
+            <button id="btnReset" class="btnSub"><i class="fa fa-refresh"></i> Reset</button>
             <button id="btnSave" class="btnMain">Save</button>
-            <button id="btnPrev" class="btnSub">Back</button>
+            <button id="btnPrev" class="btnSub"><i class="fa fa-arrow-left"></i> Back</button>
         </div>
     </div>
 </main>
@@ -351,12 +390,27 @@
                 setCanvasBackground(true);
                 img.onload = null;
                 showTools();
-                status = EditMode.Zoom;
+                setEditMode(EditMode.Zoom);
             };
             img.src = fileReader.result;
         }
         fileReader.readAsDataURL(file_url);
     });
+
+    function setEditMode(mode)
+    {
+        status = mode;
+        document.querySelector("#cnvs").classList.remove("zoomMode");
+        document.querySelector("#cnvs").classList.remove("cropMode");
+        if (mode == EditMode.Zoom)
+        {
+            document.querySelector("#cnvs").classList.add("zoomMode");
+        }
+        else if (mode == EditMode.Crop)
+        {
+            document.querySelector("#cnvs").classList.add("cropMode");
+        }
+    }
 
     function clearSelection() {
         reloadImage();
@@ -387,7 +441,7 @@
     document.querySelector("#btnCrop").addEventListener("click", () => {
         hideTools();
         document.querySelector("#cropTool").style.display = "flex";
-        status = EditMode.Crop;
+        setEditMode(EditMode.Crop);
     });
 
     document.querySelector("#btnSave").addEventListener("click", () => {
@@ -408,7 +462,7 @@
 
     document.querySelector("#btnPrev").addEventListener("click", ()=>{
         clearSelection();
-        status = EditMode.Zoom;
+        setEditMode(EditMode.Zoom);
         showTools();
     });
 
