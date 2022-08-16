@@ -13,6 +13,8 @@
 
         #cnvs_bg {
             border: 2px solid black;
+            height: 350px;
+            width: 350px;
         }
 
         #file_importer {
@@ -20,18 +22,28 @@
         }
 
         main {
-            margin: auto;
+            font-family: Calibri, sans-serif;
+            margin: 100px auto;
             justify-content: center;
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 30px;
+        }
+
+        label {
+            text-transform: uppercase;
+        }
+
+        label input:hover{
+            box-shadow: 0 0 15px 0 lightblue;
+            cursor: pointer;
         }
 
         #controls {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            width: 200px;
+            width: 300px;
             gap: 10px;
         }
 
@@ -44,9 +56,24 @@
         }
 
         button {
-            padding: 10px;
+            padding: 15px;
             cursor: pointer;
+            border-radius: 30px;
+            border: none;
+            font-size: large;
         }
+
+        .btnMain{
+            background-color: #F25;
+            color: white;
+            text-transform: uppercase;
+
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
     </style>
 </head>
 
@@ -54,31 +81,37 @@
 <header></header>
 <main>
     <div id="cnvs_bg">
-        <canvas width="400" height="300" id="cnvs"></canvas>
+        <canvas width="350" height="350" id="cnvs"></canvas>
     </div>
     <div id="controls">
         <input type="file" id="file_importer" accept="image/*">
-        <button id="btnUpload">Upload Image</button>
+        <button id="btnUpload" class="btnMain">Upload Image</button>
         <div id="toolButtons">
-            <button id="btnCrop" class="tool">Crop</button>
-
+            <button id="btnCrop" class="tool btnMain">Next</button>
+            <button id="btnZoomIn" class="tool">Zoom In</button>
+            <button id="btnZoomOut" class="tool">Zoom Out</button>
+            <button id="btnRotateLeft" class="tool">Rotate Left</button>
+            <button id="btnRotateRight" class="tool">Rotate Right</button>
+            <button id="btnReflectH" class="tool">Reflect Horizontally</button>
+            <button id="btnReflectV" class="tool">Reflect Vertically</button>
         </div>
         <div id="cropTool" class="toolOptions">
-            <label>Selection mode:</label>
+            <label>How do you want to crop it?</label>
+            <label>
+                <input type="radio" name="selection" value="free">
+                Draw
+            </label>
             <label>
                 <input type="radio" name="selection" value="rectangle" checked>
-                Rectangle
+                Box
             </label>
             <label>
                 <input type="radio" name="selection" value="ellipse">
-                Ellipse
+                Circle
             </label>
-            <label>
-                <input type="radio" name="selection" value="free">
-                Free form
-            </label>
-            <button id="btnReset">Reset</button>
-            <button id="btnSave">Save</button>
+            <button id="btnReset" class="btnSub">&#8635; Reset</button>
+            <button id="btnSave" class="btnMain">Save</button>
+            <button id="btnPrev" class="btnSub">Back</button>
         </div>
     </div>
 </main>
@@ -117,8 +150,11 @@
 
     let cnvs = document.querySelector("#cnvs");
     let ctx = cnvs.getContext("2d");
-    ctx.setLineDash([5, 3]);
-    ctx.strokeStyle = "blue";
+    //ctx.setLineDash([5, 3]);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2.5;
     let img = null;  // to be loaded when an image is uploaded
     let status = EditMode.UploadImage;
     let drawing = false;
@@ -126,37 +162,42 @@
     let start_point = null;
     let cropped_area = {x: 0, y: 0, w: cnvs.clientWidth, h: cnvs.clientHeight}; // selected area of the image
     let scaleRatio = 1;
+    let rotationAngle = 0;
+    let pan = {x: 0, y:0};
+    let reflection = {x: 1, y: 1};
 
     cnvs.addEventListener("pointerdown", (e) => {
         //console.log("Down at", e.clientX, e.clientY);
-        if (status !== EditMode.Crop) {
-            return;
-        }
         let x = e.clientX - cnvs.getBoundingClientRect().left;
         let y = e.clientY - cnvs.getBoundingClientRect().top;
-        ctx.globalCompositeOperation = "source-over"; //draw over existing content
-        const cropMode = document.querySelector("input:checked").value;
-        if (cropMode === "free") {
-            if (!path.isOpen) {
-                //starting a new selection path
-                reloadImage();
-                //draw a starting point (circle)
-                ctx.beginPath();
-                ctx.arc(x, y, 5, 0, 2 * Math.PI);
-                ctx.stroke();
-                ctx.fillStyle = "white";
-                ctx.fill();
-                //open a new path
-                ctx.beginPath();
-                ctx.moveTo(x, y);
+
+        if (status === EditMode.Crop) {
+            ctx.globalCompositeOperation = "source-over"; //draw over existing content
+            const cropMode = document.querySelector("input:checked").value;
+            if (cropMode === "free") {
+                if (!path.isOpen) {
+                    //starting a new selection path
+                    reloadImage();
+                    //draw a starting point (circle)
+                    ctx.strokeStyle = "black"
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.fillStyle = "white";
+                    ctx.fill();
+                    ctx.strokeStyle = "red"
+                    //open a new path
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                } else {
+                    //draw a new segment
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                }
+                path.addPoint(x, y);
             } else {
-                //draw a new segment
-                ctx.lineTo(x, y);
-                ctx.stroke();
+                clearSelection();
             }
-            path.addPoint(x, y);
-        } else {
-            clearSelection();
         }
         start_point = {x, y};
         drawing = true;
@@ -164,9 +205,19 @@
 
     cnvs.addEventListener("pointermove", (e) => {
         //console.log("Moved at", e.clientX, e.clientY);
-        if (drawing) {
-            let x = e.clientX - cnvs.getBoundingClientRect().left;
-            let y = e.clientY - cnvs.getBoundingClientRect().top;
+        if (!drawing) {
+            return;
+        }
+        let x = e.clientX - cnvs.getBoundingClientRect().left;
+        let y = e.clientY - cnvs.getBoundingClientRect().top;
+        if (status === EditMode.Zoom) {
+            setCanvasBackground(false);
+            pan.x += e.movementX; // x - start_point.x;
+            pan.y += e.movementY; // y - start_point.y;
+            reloadImage();
+            return;
+        }
+        if (status === EditMode.Crop) {
             let cropMode = document.querySelector("input:checked").value;
             switch (cropMode) {
                 case "free":
@@ -195,28 +246,35 @@
 
     cnvs.addEventListener("pointerup", (e) => {
         //console.log("Up at", e.clientX, e.clientY);
+
         if (!drawing)
             return;
         drawing = false;
-        let x = e.clientX - cnvs.getBoundingClientRect().left;
-        let y = e.clientY - cnvs.getBoundingClientRect().top;
-        let cropMode = document.querySelector("input:checked").value;
-        switch (cropMode) {
-            case "free":
-                cropped_area = {x: path.minX, y: path.minY, w: path.getWidth(), h: path.getHeight()};
-                if (path.isOpen) {
-                    return; //path is still open, continue adding segments
-                }
-                break;
-            case "rectangle":
-            case "ellipse":
-                cropped_area = {
-                    x: Math.min(x, start_point.x), y: Math.min(y, start_point.y),
-                    w: Math.abs(x - start_point.x), h: Math.abs(y - start_point.y)
-                };
-                break;
+        if (status === EditMode.Zoom){
+            setCanvasBackground(true);
+            return;
         }
-        finishCropping(cropMode);
+        if (status === EditMode.Crop) {
+            let x = e.clientX - cnvs.getBoundingClientRect().left;
+            let y = e.clientY - cnvs.getBoundingClientRect().top;
+            let cropMode = document.querySelector("input:checked").value;
+            switch (cropMode) {
+                case "free":
+                    cropped_area = {x: path.minX, y: path.minY, w: path.getWidth(), h: path.getHeight()};
+                    if (path.isOpen) {
+                        return; //path is still open, continue adding segments
+                    }
+                    break;
+                case "rectangle":
+                case "ellipse":
+                    cropped_area = {
+                        x: Math.min(x, start_point.x), y: Math.min(y, start_point.y),
+                        w: Math.abs(x - start_point.x), h: Math.abs(y - start_point.y)
+                    };
+                    break;
+            }
+            finishCropping(cropMode);
+        }
     });
 
     function finishCropping(cropMode) {
@@ -258,18 +316,28 @@
         if (img != null) {
             ctx.globalCompositeOperation = "source-over";
             ctx.clearRect(0, 0, cnvs.clientWidth, cnvs.clientHeight);
+            ctx.translate(pan.x, pan.y);
+            ctx.translate(cnvs.clientWidth/2, cnvs.clientHeight/2);
+            ctx.scale(reflection.x, reflection.y);
+            ctx.rotate(rotationAngle * Math.PI / 180);
+            ctx.translate(-cnvs.clientWidth/2, -cnvs.clientHeight/2);
             ctx.drawImage(img, (cnvs.clientWidth - img.width * scaleRatio) / 2,
                 (cnvs.clientHeight - img.height * scaleRatio) / 2,
                 img.width * scaleRatio,
                 img.height * scaleRatio
             );
+            ctx.resetTransform();
         }
     }
 
-    function setCanvasBackground() {
+    function setCanvasBackground(show) {
         //set the canvas container's background to the current image on the canvas
         //background image will appear behind the transparent pixels (bg color) after cropping
-        document.querySelector("#cnvs_bg").style.background = "url('" + cnvs.toDataURL("image/png") + "')";
+        if (show) {
+            document.querySelector("#cnvs_bg").style.background = "url('" + cnvs.toDataURL("image/png") + "')";
+        }else {
+            document.querySelector("#cnvs_bg").style.background = "";
+        }
     }
 
     document.querySelector("#file_importer").addEventListener("change", (e) => {
@@ -280,9 +348,10 @@
             img.onload = function () {
                 scaleRatio = getScaleToFitRatio();
                 reloadImage();
-                setCanvasBackground();
+                setCanvasBackground(true);
                 img.onload = null;
                 showTools();
+                status = EditMode.Zoom;
             };
             img.src = fileReader.result;
         }
@@ -337,14 +406,57 @@
         downloadLink.click();
     });
 
+    document.querySelector("#btnPrev").addEventListener("click", ()=>{
+        clearSelection();
+        status = EditMode.Zoom;
+        showTools();
+    });
+
     function showTools() {
         document.querySelector("#btnUpload").style.display = "none";
+        document.querySelector(".toolOptions").style.display = "none";
         document.querySelector("#toolButtons").style.display = "flex";
     }
 
     function hideTools() {
         document.querySelector("#toolButtons").style.display = "none";
     }
+
+    document.querySelector("#btnZoomIn").addEventListener("click", ()=>{
+        scaleRatio += 0.1;
+        reloadImage();
+        setCanvasBackground(true);
+    });
+
+    document.querySelector("#btnZoomOut").addEventListener("click", ()=>{
+        scaleRatio -= 0.1;
+        reloadImage();
+        setCanvasBackground(true);
+    });
+
+    document.querySelector("#btnRotateLeft").addEventListener("click", ()=>{
+        rotationAngle -= 10;
+        reloadImage();
+        setCanvasBackground(true);
+    });
+
+    document.querySelector("#btnRotateRight").addEventListener("click", ()=>{
+        rotationAngle += 10;
+        reloadImage();
+        setCanvasBackground(true);
+    });
+
+    document.querySelector("#btnReflectH").addEventListener("click", ()=>{
+        reflection.x *= -1;
+        reloadImage();
+        setCanvasBackground(true);
+    });
+
+    document.querySelector("#btnReflectV").addEventListener("click", ()=>{
+        reflection.y *= -1;
+        reloadImage();
+        setCanvasBackground(true);
+    });
 
 </script>
 </body>
