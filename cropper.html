@@ -12,11 +12,11 @@
             background-color: rgba(255, 255, 255, 0.7);
         }
 
-        .zoomMode {
+        .zoomMode canvas{
             cursor: grab;
         }
 
-        .cropMode {
+        .cropMode canvas{
             cursor: crosshair;
         }
 
@@ -44,8 +44,12 @@
         }
 
         label input:hover{
-            box-shadow: 0 0 15px 0 lightblue;
+            box-shadow: 0 0 20px 0 lightblue;
             cursor: pointer;
+        }
+
+        .uploadMode #btnCrop, .uploadMode #toolbar, .uploadMode #cropOptions{
+            display: none;
         }
 
         #controls {
@@ -56,12 +60,17 @@
             gap: 10px;
         }
 
-        .toolOptions,
-        #toolButtons {
-            display: none;
+        #cropOptions{
             flex-direction: column;
             justify-content: center;
             gap: 10px;
+        }
+
+        #toolbar {
+            flex-direction: row-reverse;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
         }
 
         button {
@@ -78,8 +87,37 @@
             text-transform: uppercase;
         }
 
-        button:hover {
-            opacity: 0.8;
+
+
+        .tool {
+            /* a button in a toolbar */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            min-height: 40px;
+            border-radius: 50%;
+            padding: 0;
+            transition: opacity 0.5s;
+        }
+
+        .cropMode #toolbar,
+        .zoomMode #toolbar,
+        .cropMode .crop,
+        .zoomMode .zoom{
+            display: flex;
+            opacity: 100%;
+        }
+
+        .cropMode .zoom,
+        .cropMode #btnUpload,
+        .zoomMode .crop,
+        .zoomMode #btnUpload,
+        .uploadMode .crop,
+        .uploadMode .zoom
+        {
+            display: none;
+            opacity: 0;
         }
 
         .icons {
@@ -100,17 +138,9 @@
             background-image: url("icons/reflect_v.svg");
         }
 
-        .tool {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            padding: 0;
+        button:hover {
+            opacity: 0.7; !important;
         }
-
-
 
     </style>
     
@@ -118,23 +148,40 @@
 
 <body>
 <header></header>
-<main>
-    <div id="cnvs_bg">
-        <canvas width="350" height="350" id="cnvs"></canvas>
+<main class="uploadMode">
+    <div id="container">
+        <div id="cnvs_bg">
+            <canvas width="350" height="350" id="cnvs"></canvas>
+        </div>
+        <div id="toolbar">
+            <button id="btnZoomIn" class="tool zoom"><i class="fa fa-plus"></i></button>
+            <button id="btnZoomOut" class="tool zoom"><i class="fa fa-minus"></i></button>
+            <span></span>
+            <button id="btnRotateLeft" class="tool zoom"><i class="fa fa-rotate-left"></i></button>
+            <button id="btnRotateRight" class="tool zoom"><i class="fa fa-rotate-right"></i></button>
+            <span></span>
+            <button id="btnReflectH" class="tool zoom"><i class="icons"></i></button>
+            <button id="btnReflectV" class="tool zoom"><i class="icons"></i></button>
+
+            <button id="btnReset" class="tool crop"><i class="fa fa-refresh"></i></button>
+        </div>
     </div>
     <div id="controls">
+        <div id="instructions">
+            <div class="upload">
+
+            </div>
+            <div class="zoom">
+
+            </div>
+            <div class="crop">
+
+            </div>
+        </div>
         <input type="file" id="file_importer" accept="image/*">
         <button id="btnUpload" class="btnMain"><i class="fa fa-cloud-upload"></i> Upload Image</button>
-        <div id="toolButtons">
-            <button id="btnCrop" class="tool btnMain ">Next</button>
-            <button id="btnZoomIn" class="tool"><i class="fa fa-plus"></i></button>
-            <button id="btnZoomOut" class="tool"><i class="fa fa-minus"></i></button>
-            <button id="btnRotateLeft" class="tool"><i class="fa fa-rotate-left"></i></button>
-            <button id="btnRotateRight" class="tool"><i class="fa fa-rotate-right"></i></button>
-            <button id="btnReflectH" class="tool"><i class="icons"></i></button>
-            <button id="btnReflectV" class="tool"><i class="icons"></i></button>
-        </div>
-        <div id="cropTool" class="toolOptions">
+        <button id="btnCrop" class="btnMain zoom">Next</button>
+        <div id="cropOptions" class="crop">
             <label>How do you want to crop it?</label>
             <label>
                 <input type="radio" name="selection" value="free">
@@ -148,7 +195,6 @@
                 <input type="radio" name="selection" value="ellipse">
                 Circle
             </label>
-            <button id="btnReset" class="btnSub"><i class="fa fa-refresh"></i> Reset</button>
             <button id="btnSave" class="btnMain">Save</button>
             <button id="btnPrev" class="btnSub"><i class="fa fa-arrow-left"></i> Back</button>
         </div>
@@ -388,9 +434,8 @@
                 scaleRatio = getScaleToFitRatio();
                 reloadImage();
                 setCanvasBackground(true);
-                img.onload = null;
-                showTools();
                 setEditMode(EditMode.Zoom);
+                img.onload = null;
             };
             img.src = fileReader.result;
         }
@@ -400,15 +445,17 @@
     function setEditMode(mode)
     {
         status = mode;
-        document.querySelector("#cnvs").classList.remove("zoomMode");
-        document.querySelector("#cnvs").classList.remove("cropMode");
-        if (mode == EditMode.Zoom)
+        if (mode === EditMode.Zoom)
         {
-            document.querySelector("#cnvs").classList.add("zoomMode");
+            document.querySelector("main").classList.remove("cropMode");
+            document.querySelector("main").classList.remove("uploadMode");
+            document.querySelector("main").classList.add("zoomMode");
         }
-        else if (mode == EditMode.Crop)
+        else if (mode === EditMode.Crop)
         {
-            document.querySelector("#cnvs").classList.add("cropMode");
+            document.querySelector("main").classList.remove("uploadMode");
+            document.querySelector("main").classList.remove("zoomMode");
+            document.querySelector("main").classList.add("cropMode");
         }
     }
 
@@ -439,8 +486,6 @@
     });
 
     document.querySelector("#btnCrop").addEventListener("click", () => {
-        hideTools();
-        document.querySelector("#cropTool").style.display = "flex";
         setEditMode(EditMode.Crop);
     });
 
@@ -463,18 +508,8 @@
     document.querySelector("#btnPrev").addEventListener("click", ()=>{
         clearSelection();
         setEditMode(EditMode.Zoom);
-        showTools();
     });
 
-    function showTools() {
-        document.querySelector("#btnUpload").style.display = "none";
-        document.querySelector(".toolOptions").style.display = "none";
-        document.querySelector("#toolButtons").style.display = "flex";
-    }
-
-    function hideTools() {
-        document.querySelector("#toolButtons").style.display = "none";
-    }
 
     document.querySelector("#btnZoomIn").addEventListener("click", ()=>{
         scaleRatio += 0.1;
