@@ -12,11 +12,11 @@
             background-color: rgba(255, 255, 255, 0.7);
         }
 
-        .zoomMode canvas{
+        .zoomMode canvas {
             cursor: grab;
         }
 
-        .cropMode canvas{
+        .cropMode canvas {
             cursor: crosshair;
         }
 
@@ -43,12 +43,12 @@
             text-transform: uppercase;
         }
 
-        label input:hover{
+        label input:hover {
             box-shadow: 0 0 20px 0 lightblue;
             cursor: pointer;
         }
 
-        .uploadMode #btnCrop, .uploadMode #toolbar, .uploadMode #cropOptions{
+        .uploadMode #btnCrop, .uploadMode #toolbar, .uploadMode #cropOptions {
             display: none;
         }
 
@@ -56,17 +56,25 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            width: 300px;
+            width: 250px;
             gap: 10px;
         }
 
-        #cropOptions{
+        #cropOptions {
             flex-direction: column;
             justify-content: center;
             gap: 10px;
         }
 
-        #toolbar {
+        #cropOptions div {
+
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #toolbar div {
+            width: 100%;
             flex-direction: row-reverse;
             justify-content: center;
             gap: 10px;
@@ -79,15 +87,27 @@
             border-radius: 30px;
             border: none;
             font-size: large;
+            text-align: center;
         }
 
-        .btnMain{
+        .btnMain {
             background-color: #F25;
             color: white;
             text-transform: uppercase;
         }
 
+        .btnMain:hover {
+            background-color: #F57;
+        }
 
+
+        .btnSub {
+            background-color: #EEEEEE;
+        }
+
+        .btnSub:hover {
+            background-color: lightgray;
+        }
 
         .tool {
             /* a button in a toolbar */
@@ -99,23 +119,26 @@
             border-radius: 50%;
             padding: 0;
             transition: opacity 0.5s;
+            background-color: #EEEEEE;
         }
 
-        .cropMode #toolbar,
-        .zoomMode #toolbar,
+        .tool:hover {
+            background-color: lightgray;
+        }
+
         .cropMode .crop,
-        .zoomMode .zoom{
+        .zoomMode .zoom {
             display: flex;
+            justify-content: center;
             opacity: 100%;
         }
 
         .cropMode .zoom,
-        .cropMode #btnUpload,
+        .cropMode .upload,
         .zoomMode .crop,
-        .zoomMode #btnUpload,
+        .zoomMode .upload,
         .uploadMode .crop,
-        .uploadMode .zoom
-        {
+        .uploadMode .zoom {
             display: none;
             opacity: 0;
         }
@@ -130,20 +153,17 @@
             height: 25px;
         }
 
-        #btnReflectH i{
+        #btnReflectH i {
             background-image: url("icons/reflect_h.svg");
         }
 
-        #btnReflectV i{
+        #btnReflectV i {
             background-image: url("icons/reflect_v.svg");
         }
 
-        button:hover {
-            opacity: 0.7; !important;
-        }
 
     </style>
-    
+
 </head>
 
 <body>
@@ -154,22 +174,25 @@
             <canvas width="350" height="350" id="cnvs"></canvas>
         </div>
         <div id="toolbar">
-            <button id="btnZoomIn" class="tool zoom"><i class="fa fa-plus"></i></button>
-            <button id="btnZoomOut" class="tool zoom"><i class="fa fa-minus"></i></button>
-            <span></span>
-            <button id="btnRotateLeft" class="tool zoom"><i class="fa fa-rotate-left"></i></button>
-            <button id="btnRotateRight" class="tool zoom"><i class="fa fa-rotate-right"></i></button>
-            <span></span>
-            <button id="btnReflectH" class="tool zoom"><i class="icons"></i></button>
-            <button id="btnReflectV" class="tool zoom"><i class="icons"></i></button>
-
-            <button id="btnReset" class="tool crop"><i class="fa fa-refresh"></i></button>
+            <div class="zoom">
+                <button id="btnZoomIn" class="tool"><i class="fa fa-plus"></i></button>
+                <button id="btnZoomOut" class="tool"><i class="fa fa-minus"></i></button>
+                <span></span>
+                <button id="btnRotateLeft" class="tool"><i class="fa fa-rotate-left"></i></button>
+                <button id="btnRotateRight" class="tool"><i class="fa fa-rotate-right"></i></button>
+                <span></span>
+                <button id="btnReflectH" class="tool"><i class="icons"></i></button>
+                <button id="btnReflectV" class="tool"><i class="icons"></i></button>
+            </div>
+            <div class="crop">
+                <button id="btnReset" class="tool"><i class="fa fa-refresh"></i></button>
+            </div>
         </div>
     </div>
     <div id="controls">
         <div id="instructions">
             <div class="upload">
-
+                To get started upload a photo!
             </div>
             <div class="zoom">
 
@@ -179,25 +202,27 @@
             </div>
         </div>
         <input type="file" id="file_importer" accept="image/*">
-        <button id="btnUpload" class="btnMain"><i class="fa fa-cloud-upload"></i> Upload Image</button>
+        <button id="btnUpload" class="btnMain upload"><i class="fa fa-cloud-upload"></i> Upload Image</button>
         <button id="btnCrop" class="btnMain zoom">Next</button>
         <div id="cropOptions" class="crop">
-            <label>How do you want to crop it?</label>
-            <label>
-                <input type="radio" name="selection" value="free">
-                Draw
-            </label>
-            <label>
-                <input type="radio" name="selection" value="rectangle" checked>
-                Box
-            </label>
-            <label>
-                <input type="radio" name="selection" value="ellipse">
-                Circle
-            </label>
-            <button id="btnSave" class="btnMain">Save</button>
-            <button id="btnPrev" class="btnSub"><i class="fa fa-arrow-left"></i> Back</button>
+            <p>How do you want to crop it?</p>
+            <div>
+                <label>
+                    <input type="radio" name="selection" value="free">
+                    Draw
+                </label>
+                <label>
+                    <input type="radio" name="selection" value="rectangle" checked>
+                    Box
+                </label>
+                <label>
+                    <input type="radio" name="selection" value="ellipse">
+                    Circle
+                </label>
+            </div>
         </div>
+        <button id="btnSave" class="btnMain crop">Save</button>
+        <button id="btnPrev" class="btnSub crop"><i class="fa fa-arrow-left"></i> Back</button>
     </div>
 </main>
 <footer></footer>
@@ -248,7 +273,7 @@
     let cropped_area = {x: 0, y: 0, w: cnvs.clientWidth, h: cnvs.clientHeight}; // selected area of the image
     let scaleRatio = 1;
     let rotationAngle = 0;
-    let pan = {x: 0, y:0};
+    let pan = {x: 0, y: 0};
     let reflection = {x: 1, y: 1};
 
     cnvs.addEventListener("pointerdown", (e) => {
@@ -335,7 +360,7 @@
         if (!drawing)
             return;
         drawing = false;
-        if (status === EditMode.Zoom){
+        if (status === EditMode.Zoom) {
             setCanvasBackground(true);
             return;
         }
@@ -402,10 +427,10 @@
             ctx.globalCompositeOperation = "source-over";
             ctx.clearRect(0, 0, cnvs.clientWidth, cnvs.clientHeight);
             ctx.translate(pan.x, pan.y);
-            ctx.translate(cnvs.clientWidth/2, cnvs.clientHeight/2);
+            ctx.translate(cnvs.clientWidth / 2, cnvs.clientHeight / 2);
             ctx.scale(reflection.x, reflection.y);
             ctx.rotate(rotationAngle * Math.PI / 180);
-            ctx.translate(-cnvs.clientWidth/2, -cnvs.clientHeight/2);
+            ctx.translate(-cnvs.clientWidth / 2, -cnvs.clientHeight / 2);
             ctx.drawImage(img, (cnvs.clientWidth - img.width * scaleRatio) / 2,
                 (cnvs.clientHeight - img.height * scaleRatio) / 2,
                 img.width * scaleRatio,
@@ -420,7 +445,7 @@
         //background image will appear behind the transparent pixels (bg color) after cropping
         if (show) {
             document.querySelector("#cnvs_bg").style.background = "url('" + cnvs.toDataURL("image/png") + "')";
-        }else {
+        } else {
             document.querySelector("#cnvs_bg").style.background = "";
         }
     }
@@ -442,17 +467,13 @@
         fileReader.readAsDataURL(file_url);
     });
 
-    function setEditMode(mode)
-    {
+    function setEditMode(mode) {
         status = mode;
-        if (mode === EditMode.Zoom)
-        {
+        if (mode === EditMode.Zoom) {
             document.querySelector("main").classList.remove("cropMode");
             document.querySelector("main").classList.remove("uploadMode");
             document.querySelector("main").classList.add("zoomMode");
-        }
-        else if (mode === EditMode.Crop)
-        {
+        } else if (mode === EditMode.Crop) {
             document.querySelector("main").classList.remove("uploadMode");
             document.querySelector("main").classList.remove("zoomMode");
             document.querySelector("main").classList.add("cropMode");
@@ -505,43 +526,43 @@
         downloadLink.click();
     });
 
-    document.querySelector("#btnPrev").addEventListener("click", ()=>{
+    document.querySelector("#btnPrev").addEventListener("click", () => {
         clearSelection();
         setEditMode(EditMode.Zoom);
     });
 
 
-    document.querySelector("#btnZoomIn").addEventListener("click", ()=>{
+    document.querySelector("#btnZoomIn").addEventListener("click", () => {
         scaleRatio += 0.1;
         reloadImage();
         setCanvasBackground(true);
     });
 
-    document.querySelector("#btnZoomOut").addEventListener("click", ()=>{
+    document.querySelector("#btnZoomOut").addEventListener("click", () => {
         scaleRatio -= 0.1;
         reloadImage();
         setCanvasBackground(true);
     });
 
-    document.querySelector("#btnRotateLeft").addEventListener("click", ()=>{
+    document.querySelector("#btnRotateLeft").addEventListener("click", () => {
         rotationAngle -= 10;
         reloadImage();
         setCanvasBackground(true);
     });
 
-    document.querySelector("#btnRotateRight").addEventListener("click", ()=>{
+    document.querySelector("#btnRotateRight").addEventListener("click", () => {
         rotationAngle += 10;
         reloadImage();
         setCanvasBackground(true);
     });
 
-    document.querySelector("#btnReflectH").addEventListener("click", ()=>{
+    document.querySelector("#btnReflectH").addEventListener("click", () => {
         reflection.x *= -1;
         reloadImage();
         setCanvasBackground(true);
     });
 
-    document.querySelector("#btnReflectV").addEventListener("click", ()=>{
+    document.querySelector("#btnReflectV").addEventListener("click", () => {
         reflection.y *= -1;
         reloadImage();
         setCanvasBackground(true);
