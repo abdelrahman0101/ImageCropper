@@ -2,14 +2,42 @@
 <html lang="">
 
 <head>
-    <meta charset="utf-8">
     <title>Image Cropper</title>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <style>
+        main {
+            font-family: Calibri, sans-serif;
+            min-width: 350px;
+            /*max-width: 80%;
+
+             */
+            margin: auto;
+            /*
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+             */
+        }
+
+        h1 {
+            text-transform: uppercase;
+            text-align: center;
+        }
+
         #cnvs {
             margin: 0;
+            padding: 0;
             display: block;
             background-color: rgba(255, 255, 255, 0.7);
+            touch-action: none;
         }
 
         .zoomMode canvas {
@@ -21,112 +49,16 @@
         }
 
         #cnvs_bg {
+            padding: 0;
             border: 2px solid black;
+            box-sizing: content-box;
             height: 350px;
             width: 350px;
+            margin: auto;
         }
 
         #file_importer {
             display: none;
-        }
-
-
-        .icons {
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: 20px 20px;
-            display: inline-block;
-            margin: auto;
-            width: 25px;
-            height: 25px;
-        }
-
-        #btnReflectH i {
-            background-image: url("icons/reflect_h.svg");
-        }
-
-        #btnReflectV i {
-            background-image: url("icons/reflect_v.svg");
-        }
-
-        /*
-        main {
-            font-family: Calibri, sans-serif;
-            margin: 100px auto;
-            justify-content: center;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-        }
-
-        label {
-            text-transform: uppercase;
-        }
-
-        label input:hover {
-            box-shadow: 0 0 20px 0 lightblue;
-            cursor: pointer;
-        }
-
-        .uploadMode #btnCrop, .uploadMode #toolbar, .uploadMode #cropOptions {
-            display: none;
-        }
-
-        #controls {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            width: 250px;
-            gap: 10px;
-        }
-
-        #cropOptions {
-            flex-direction: column;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        #cropOptions div {
-
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #toolbar div {
-            width: 100%;
-            flex-direction: row-reverse;
-            justify-content: center;
-            gap: 10px;
-            padding: 10px;
-        }
-
-        button {
-            padding: 15px;
-            cursor: pointer;
-            border-radius: 30px;
-            border: none;
-            font-size: large;
-            text-align: center;
-        }
-
-        .btnMain {
-            background-color: #F25;
-            color: white;
-            text-transform: uppercase;
-        }
-
-        .btnMain:hover {
-            background-color: #F57;
-        }
-
-
-        .btnSub {
-            background-color: #EEEEEE;
-        }
-
-        .btnSub:hover {
-            background-color: lightgray;
         }
 
         .tool {
@@ -145,11 +77,86 @@
             background-color: lightgray;
         }
 
-        .cropMode .crop,
-        .zoomMode .zoom {
+        .icons {
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 20px 20px;
+            display: inline-block;
+            margin: auto;
+            width: 25px;
+            height: 25px;
+        }
+
+        .toolbar {
             display: flex;
+            width: 100%;
+            box-sizing: border-box;
+            flex-direction: row;
             justify-content: center;
-            opacity: 100%;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .toolbar div{
+            display: flex;
+            width: 100px;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 0;
+        }
+
+        .toolbar span {
+            display: none;
+        }
+
+        label {
+            text-transform: uppercase;
+        }
+
+        label input:hover {
+            box-shadow: 0 0 20px 0 lightblue;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 30px;
+            border: none;
+            font-size: large;
+            text-align: center;
+        }
+
+        .btnMain {
+            background-color: #F25;
+            color: white;
+            text-transform: uppercase;
+            width: 200px;
+        }
+
+        .btnMain:hover {
+            background-color: #F57;
+        }
+
+        .btnSub {
+            background-color: #EEEEEE;
+            width: 200px;
+        }
+
+        .btnSub:hover {
+            background-color: lightgray;
+        }
+
+        #btnReflectH i {
+            background-image: url("icons/reflect_h.svg");
+        }
+
+        #btnReflectV i {
+            background-image: url("icons/reflect_v.svg");
         }
 
         .cropMode .zoom,
@@ -162,72 +169,147 @@
             opacity: 0;
         }
 
-    */
+        #controls {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 250px;
+            gap: 10px;
+        }
+
+        #cropOptions {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            gap: 10px;
+        }
+
+        #cropOptions div {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+        }
+
+        #instructions {
+            height: 5em;
+        }
+
+        #instructions .crop.free .rectangle,
+        #instructions .crop.free .ellipse,
+        #instructions .crop.rectangle .free,
+        #instructions .crop.rectangle .ellipse,
+        #instructions .crop.ellipse .free,
+        #instructions .crop.ellipse .rectangle
+        {
+            display: none;
+        }
+
 
     </style>
 
 </head>
 
 <body>
-<header></header>
-<main class="uploadMode">
-    <div id="container">
-        <div id="cnvs_bg">
-            <canvas width="350" height="350" id="cnvs"></canvas>
-        </div>
-        <div id="toolbar">
-            <div class="zoom">
-                <button id="btnZoomIn" class="tool"><i class="fa fa-plus"></i></button>
-                <button id="btnZoomOut" class="tool"><i class="fa fa-minus"></i></button>
-                <span></span>
-                <button id="btnRotateLeft" class="tool"><i class="fa fa-rotate-left"></i></button>
-                <button id="btnRotateRight" class="tool"><i class="fa fa-rotate-right"></i></button>
-                <span></span>
-                <button id="btnReflectH" class="tool"><i class="icons"></i></button>
-                <button id="btnReflectV" class="tool"><i class="icons"></i></button>
-            </div>
-            <div class="crop">
-                <button id="btnReset" class="tool"><i class="fa fa-refresh"></i></button>
-            </div>
-        </div>
-    </div>
-    <div id="controls">
-        <div id="instructions">
-            <div class="upload">
-                To get started upload a photo!
-            </div>
-            <div class="zoom">
+<header>
 
-            </div>
-            <div class="crop">
+</header>
+<main>
+    <div id="cropper" class="uploadMode container p-md-5">
+        <div class="row mb-md-3">
+            <h1>Face cut out</h1>
+        </div>
+        <div class="row">
+            <div id="cnvs_container" class="col">
+                <div id="cnvs_bg">
+                    <canvas width="350" height="350" id="cnvs"></canvas>
+                </div>
+                <div class="toolbar zoom mt-md-3">
+                    <div>
+                        <button id="btnZoomIn" class="tool"><i class="fa fa-plus"></i></button>
+                        <button id="btnZoomOut" class="tool"><i class="fa fa-minus"></i></button>
+                        <span class="d-md-inline">Zoom</span>
+                    </div>
 
+                    <div>
+                        <button id="btnRotateLeft" class="tool"><i class="fa fa-rotate-left"></i></button>
+                        <button id="btnRotateRight" class="tool"><i class="fa fa-rotate-right"></i></button>
+                        <span class="d-md-inline">Rotate</span>
+                    </div>
+
+                    <div>
+                        <button id="btnReflectH" class="tool"><i class="icons"></i></button>
+                        <button id="btnReflectV" class="tool"><i class="icons"></i></button>
+                        <span class="d-md-inline">Flip</span>
+                    </div>
+                </div>
+                <div class="toolbar crop mt-md-3">
+                    <button id="btnReset" class="tool"><i class="fa fa-refresh"></i></button>
+                    <span class="d-md-inline">Reset</span>
+                </div>
+            </div>
+
+            <!-- right side -->
+            <div id="controls" class="col">
+                <div id="cropOptions" class="crop">
+                    <p>How do you want to crop it?</p>
+                    <div class="px-md-5">
+                        <label class="">
+                            <input type="radio" name="selection" value="free" checked>
+                            Draw
+                        </label>
+                        <label class="">
+                            <input type="radio" name="selection" value="rectangle">
+                            Box
+                        </label>
+                        <label class="">
+                            <input type="radio" name="selection" value="ellipse">
+                            Circle
+                        </label>
+                    </div>
+                </div>
+                <div id="instructions">
+                    <div class="upload">
+                        To get started upload a photo!
+                    </div>
+                    <div class="zoom">
+                        <ul>
+                            <li>Use the tools to zoom, rotate, or flip the photo.</li>
+                            <li>Drag the photo in any direction to centralise it.</li>
+                            <li>If it has multiple faces, select only one at a time.</li>
+                        </ul>
+                    </div>
+                    <div class="crop free">
+                        <ul class="free">
+                            <li>Use your finger or your mouse to select the face.</li>
+                            <li>Draw in one movement or click to add a point.</li>
+                            <li>Click reset to start over.</li>
+                        </ul>
+                        <ul class="rectangle">
+                            <li>Drag around a rectangular area to crop it.</li>
+                        </ul>
+                        <ul class="ellipse">
+                            <li>Drag around a circular area to crop it.</li>
+                        </ul>
+                    </div>
+                </div>
+                <input type="file" id="file_importer" accept="image/*">
+                <button id="btnUpload" class="btnMain upload"><i class="fa fa-cloud-upload"></i> Upload Image</button>
+                <button id="btnCrop" class="btnMain zoom mt-md-3">Next</button>
+
+                <button id="btnSave" class="btnMain crop mt-md-3">Save</button>
+                <button id="btnPrev" class="btnSub crop"><i class="fa fa-arrow-left"></i> Back</button>
             </div>
         </div>
-        <input type="file" id="file_importer" accept="image/*">
-        <button id="btnUpload" class="btnMain upload"><i class="fa fa-cloud-upload"></i> Upload Image</button>
-        <button id="btnCrop" class="btnMain zoom">Next</button>
-        <div id="cropOptions" class="crop">
-            <p>How do you want to crop it?</p>
-            <div>
-                <label>
-                    <input type="radio" name="selection" value="free">
-                    Draw
-                </label>
-                <label>
-                    <input type="radio" name="selection" value="rectangle" checked>
-                    Box
-                </label>
-                <label>
-                    <input type="radio" name="selection" value="ellipse">
-                    Circle
-                </label>
-            </div>
-        </div>
-        <button id="btnSave" class="btnMain crop">Save</button>
-        <button id="btnPrev" class="btnSub crop"><i class="fa fa-arrow-left"></i> Back</button>
     </div>
 </main>
 <footer></footer>
+
 <script>
     function Path() { //path for free-form selection
         this.points = [];
@@ -313,6 +395,8 @@
         }
         start_point = {x, y};
         drawing = true;
+        e.preventDefault(); //disable browser gestures
+        return false;
     });
 
     cnvs.addEventListener("pointermove", (e) => {
@@ -354,6 +438,8 @@
                     break;
             }
         }
+        e.preventDefault(); //disable browser gestures
+        return false;
     });
 
     cnvs.addEventListener("pointerup", (e) => {
@@ -387,6 +473,8 @@
             }
             finishCropping(cropMode);
         }
+        e.preventDefault(); //disable browser gestures
+        return false;
     });
 
     function finishCropping(cropMode) {
@@ -472,13 +560,13 @@
     function setEditMode(mode) {
         status = mode;
         if (mode === EditMode.Zoom) {
-            document.querySelector("main").classList.remove("cropMode");
-            document.querySelector("main").classList.remove("uploadMode");
-            document.querySelector("main").classList.add("zoomMode");
+            document.querySelector("#cropper").classList.remove("cropMode");
+            document.querySelector("#cropper").classList.remove("uploadMode");
+            document.querySelector("#cropper").classList.add("zoomMode");
         } else if (mode === EditMode.Crop) {
-            document.querySelector("main").classList.remove("uploadMode");
-            document.querySelector("main").classList.remove("zoomMode");
-            document.querySelector("main").classList.add("cropMode");
+            document.querySelector("#cropper").classList.remove("uploadMode");
+            document.querySelector("#cropper").classList.remove("zoomMode");
+            document.querySelector("#cropper").classList.add("cropMode");
         }
     }
 
@@ -569,6 +657,15 @@
         reloadImage();
         setCanvasBackground(true);
     });
+
+    document.querySelectorAll("#cropOptions input").forEach(rad => {
+        rad.addEventListener("click", (e)=>{
+            document.querySelector("#instructions .crop").classList.remove("free");
+            document.querySelector("#instructions .crop").classList.remove("rectangle");
+            document.querySelector("#instructions .crop").classList.remove("ellipse");
+            document.querySelector("#instructions .crop").classList.add(e.target.value);
+        });
+    })
 
 </script>
 </body>
